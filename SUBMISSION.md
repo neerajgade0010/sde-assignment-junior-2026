@@ -1,39 +1,134 @@
-# Submission
+# Assignment A — Interaction Ledger & Reporting Pipeline
 
-> Replace everything in _italics_. Be concise: bullet points are fine. We read every word.
+## 1. Overview
 
-## Candidate
-- **Name:** _
-- **Assignment chosen:** _A (Data) / B (Workflow)_
-- **Time spent (honest estimate):** _e.g. 7h_
+This project implements a data ingestion and reporting pipeline using Python and SQLite.
 
-## How to run
-```bash
-# exact commands from a clean clone: setup, run, test
+It processes lead CSV files and event JSONL files from multiple data drops, validates and normalizes input data, protects personally identifiable information (PII), links events to leads, and generates the required reports.
+
+## 2. Technologies Used
+
+- Python
+- SQLite
+- Pandas (if used by the implementation)
+- Cryptography (Fernet encryption)
+- HMAC hashing
+- Pytest
+
+## 3. Project Structure
+
+```text
+sde-assignment-junior-2026/
+├── assignment-a-data/
+│   └── schemas/
+├── data/
+│   ├── drop_1/
+│   └── drop_2/
+├── solution/
+│   ├── database.py
+│   ├── validation.py
+│   ├── schema_loader.py
+│   ├── security.py
+│   ├── lead_ingestion.py
+│   ├── event_ingestion.py
+│   ├── reports.py
+│   ├── generate_reports.py
+│   ├── requirements.txt
+│   ├── tests/
+│   └── reports/
+├── SUBMISSION.md
+└── AI_USAGE.md
 ```
 
-## Design
-_Your architecture in a few paragraphs, plus a diagram if it helps. For A: your database schema
-and why. For B: your lead state machine (ASCII or Mermaid) and how you guarantee at-most-once
-dialling._
+## 4. Setup Instructions
 
-## Decisions & assumptions
-_Every place where you made a call the spec didn't make for you, and why._
+Open a terminal in the `solution` directory.
 
-| Decision | Why | Alternative considered |
-|---|---|---|
-| _ | _ | _ |
+Create and activate a virtual environment:
 
-## Failure modes considered
-_What can go wrong and how your solution handles it (bad input, re-runs, crashes, timeouts,
-duplicates...). Also list anything you know is **not** handled._
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
-## Testing
-_What you tested, what you didn't, and why._
+Install dependencies:
 
-## Results
-_For A: timings, and anything surprising in the data. For B: your `/admin/report` summary from
-a full run, ideally one that includes a `kill -9`._
+```powershell
+pip install -r requirements.txt
+```
 
-## If I had another day
-_What you'd do next, in priority order._
+## 5. Data Ingestion
+
+Run the following commands from the `solution` directory.
+
+### Step 1: Ingest Drop 1 leads
+
+```powershell
+python -c "from lead_ingestion import ingest_leads; ingest_leads('../data/drop_1')"
+```
+
+### Step 2: Ingest Drop 1 events
+
+```powershell
+python -c "from event_ingestion import ingest_events; ingest_events('../data/drop_1')"
+```
+
+### Step 3: Ingest Drop 2 leads
+
+```powershell
+python -c "from lead_ingestion import ingest_leads; ingest_leads('../data/drop_2')"
+```
+
+### Step 4: Ingest Drop 2 events
+
+```powershell
+python -c "from event_ingestion import ingest_events; ingest_events('../data/drop_2')"
+```
+
+The event ingestion process performs a final event re-linking pass, allowing previously orphaned events to be linked when their corresponding leads become available.
+
+## 6. Generate Reports
+
+From the `solution` directory, execute:
+
+```powershell
+python generate_reports.py
+```
+
+The generated reports are saved in:
+
+```text
+solution/reports/
+```
+
+The five output files are:
+
+- `batch_summary.csv`
+- `daily_overview.csv`
+- `lead_report.csv`
+- `rejections.csv`
+- `data_quality.json`
+
+## 7. Run Tests
+
+Run the complete test suite:
+
+```powershell
+python -m pytest -v
+```
+
+The implementation's current test suite contains 33 tests, all of which passed during development.
+
+## 8. Data Security
+
+The implementation uses encryption for sensitive lead information and deterministic HMAC hashing for phone-based matching.
+
+Generated encryption keys are stored locally and should not be committed to version control.
+
+## 9. Idempotency
+
+The ingestion process maintains file-ingestion records to prevent already processed files from being processed again.
+
+## 10. Output
+
+All five required reports are generated from the SQLite database after ingestion is complete.
